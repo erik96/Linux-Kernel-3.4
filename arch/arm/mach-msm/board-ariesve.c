@@ -46,6 +46,7 @@
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 #include <asm/setup.h>
+#include <asm/system_info.h>
 
 #include <mach/mpp.h>
 #include <mach/board.h>
@@ -69,7 +70,7 @@
 #include <mach/msm_tsif.h>
 #include <mach/socinfo.h>
 #include <mach/msm_memtypes.h>
-#include <linux/cyttsp.h>
+#include <linux/cyttsp-qc.h>
 
 #include <asm/mach/mmc.h>
 #include <asm/mach/flash.h>
@@ -77,9 +78,7 @@
 #include <linux/platform_data/qcom_crypto_device.h>
 
 #include "devices.h"
-#ifdef CONFIG_ANDROID_RAM_CONSOLE
 #include "devices-msm7x30.h"
-#endif
 #include "timer.h"
 #ifdef CONFIG_USB_G_ANDROID
 #include <linux/usb/android.h>
@@ -89,6 +88,7 @@
 #include "pm-boot.h"
 #include "spm.h"
 #include "acpuclock.h"
+#include "clock.h"
 #include <mach/dal_axi.h>
 #include <mach/msm_serial_hs.h>
 #include <mach/qdsp5v2/mi2s.h>
@@ -424,7 +424,7 @@ static int pm8058_gpios_init(void)
 		},
 	};
 
-#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
+
 	struct pm8xxx_gpio_init_info sdcc_det = {
 		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SD_DET - 1),
 		{
@@ -444,7 +444,7 @@ static int pm8058_gpios_init(void)
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
 		return rc;
 	}
-#endif
+
 
 	if (machine_is_msm7x30_fluid()) {
 		/* Haptics gpio */
@@ -1090,6 +1090,19 @@ static struct i2c_board_info si4709_info[] __initdata = {
 };
 #endif
 
+static void config_gpio_table(uint32_t *table, int len)
+{
+	int n, rc;
+	for (n = 0; n < len; n++) {
+		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
+		if (rc) {
+			pr_err("%s: gpio_tlmm_config(%#x)=%d\n",
+				 __func__, table[n], rc);
+			 break;
+		}
+	}
+}
+
 #ifdef CONFIG_MSM_CAMERA
 
 #ifdef NOT_SET
@@ -1200,18 +1213,7 @@ static uint32_t camera_on_gpio_table[] = {
 #endif
 };
 
-static void config_gpio_table(uint32_t *table, int len)
-{
-	int n, rc;
-	for (n = 0; n < len; n++) {
-		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
-		if (rc) {
-			pr_err("%s: gpio_tlmm_config(%#x)=%d\n",
-				__func__, table[n], rc);
-			break;
-		}
-	}
-}
+
 static int config_camera_on_gpios(void)
 {
 	config_gpio_table(camera_on_gpio_table,
@@ -1591,26 +1593,6 @@ static struct platform_device msm_camera_sensor_s5ka3dfx = {
 };
 #endif
 
-#ifdef CONFIG_MSM_GEMINI
-static struct resource msm_gemini_resources[] = {
-	{
-		.start  = 0xA3A00000,
-		.end    = 0xA3A00000 + 0x0150 - 1,
-		.flags  = IORESOURCE_MEM,
-	},
-	{
-		.start  = INT_JPEG,
-		.end    = INT_JPEG,
-		.flags  = IORESOURCE_IRQ,
-	},
-};
-
-static struct platform_device msm_gemini_device = {
-	.name           = "msm_gemini",
-	.resource       = msm_gemini_resources,
-	.num_resources  = ARRAY_SIZE(msm_gemini_resources),
-};
-#endif
 
 #ifdef CONFIG_MSM_VPE
 static struct resource msm_vpe_resources[] = {
@@ -1635,6 +1617,28 @@ static struct platform_device msm_vpe_device = {
 #endif
 
 #endif /*CONFIG_MSM_CAMERA*/
+
+#ifdef CONFIG_MSM_GEMINI
+static struct resource msm_gemini_resources[] = {
+  {
+	.start  = 0xA3A00000,
+	.end    = 0xA3A00000 + 0x0150 - 1,
+	.flags  = IORESOURCE_MEM,
+  },
+  {
+	.start  = INT_JPEG,
+	.end    = INT_JPEG,
+	.flags  = IORESOURCE_IRQ,
+  },
+};
+
+static struct platform_device msm_gemini_device = {
+  .name           = "msm_gemini",
+  .resource       = msm_gemini_resources,
+  .num_resources  = ARRAY_SIZE(msm_gemini_resources),
+};
+#endif
+
 
 static struct platform_device msm_vibrator_device = {
 	.name 		    = "msm_vibrator",
@@ -3744,7 +3748,7 @@ static struct platform_device hs_device = {
 };
 
 static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
-	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE] = {
+	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE)] = {
 		.idle_supported = 1,
 		.suspend_supported = 1,
 		.idle_enabled = 1,
@@ -3752,7 +3756,7 @@ static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 		.latency = 8594,
 		.residency = 23740,
 	},
-	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN] = {
+	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN)] = {
 		.idle_supported = 1,
 		.suspend_supported = 1,
 		.idle_enabled = 1,
@@ -3760,7 +3764,7 @@ static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 		.latency = 4594,
 		.residency = 23740,
 	},
-	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE] = {
+	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)] = {
 #ifdef CONFIG_MSM_STANDALONE_POWER_COLLAPSE
 		.idle_supported = 1,
 		.suspend_supported = 1,
@@ -3775,7 +3779,7 @@ static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 		.latency = 500,
 		.residency = 6000,
 	},
-	[MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT] = {
+	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT)] = {
 		.idle_supported = 1,
 		.suspend_supported = 1,
 		.idle_enabled = 0,
@@ -3783,7 +3787,7 @@ static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 		.latency = 443,
 		.residency = 1098,
 	},
-	[MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT] = {
+	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
 		.idle_supported = 1,
 		.suspend_supported = 1,
 		.idle_enabled = 1,
@@ -3793,25 +3797,7 @@ static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 	},
 };
 
-u32 msm7x30_power_collapse_latency(enum msm_pm_sleep_mode mode)
-{
-	switch (mode) {
-	case MSM_PM_SLEEP_MODE_POWER_COLLAPSE:
-		return msm_pm_data
-		[MSM_PM_SLEEP_MODE_POWER_COLLAPSE].latency;
-	case MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN:
-		return msm_pm_data
-		[MSM_PM_SLEEP_MODE_POWER_COLLAPSE_NO_XO_SHUTDOWN].latency;
-	case MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT:
-		return msm_pm_data
-		[MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT].latency;
-	case MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT:
-		return msm_pm_data
-		[MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT].latency;
-	default:
-	return 0;
-	}
-}
+
 
 static struct msm_pm_boot_platform_data msm_pm_boot_pdata __initdata = {
         .mode = MSM_PM_BOOT_CONFIG_RESET_VECTOR_VIRT,
@@ -5412,12 +5398,11 @@ static struct platform_device *devices[] __initdata = {
 #ifdef CONFIG_ION_MSM
 	&ion_dev,
 #endif
+	&msm_adsp_device,
 #ifdef CONFIG_SAMSUNG_JACK
 	&sec_device_jack,
 #endif
-#ifdef CONFIG_ANDROID_RAM_CONSOLE
 	&ram_console_device,
-#endif
 };
 
 static struct msm_gpio msm_i2c_gpios_hw[] = {
@@ -6126,7 +6111,6 @@ out:
 #endif
 
 #ifdef CONFIG_MMC_MSM_SDC4_SUPPORT
-#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 static unsigned int msm7x30_sdcc_slot_status(struct device *dev)
 {
 	int rc;
@@ -6135,7 +6119,6 @@ static unsigned int msm7x30_sdcc_slot_status(struct device *dev)
 
 	return rc;
 }
-#endif
 
 static int msm_sdcc_get_wpswitch(struct device *dv)
 {
@@ -6231,11 +6214,11 @@ static struct mmc_platform_data msm7x30_sdc4_data = {
 	.ocr_mask	= MMC_VDD_27_28 | MMC_VDD_28_29,
 	.translate_vdd	= msm_sdcc_setup_power,
 	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
-#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
+
 	.status      = msm7x30_sdcc_slot_status,
 	.status_irq  = MSM_GPIO_TO_INT(116),
 	.irq_flags   = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
-#endif
+
 	.wpswitch    = msm_sdcc_get_wpswitch,
 	.msmsdcc_fmin	= 144000,
 	.msmsdcc_fmid	= 24576000,
@@ -6332,8 +6315,7 @@ static void __init msm7x30_init_mmc(void)
 #ifdef CONFIG_MMC_MSM_SDC1_SUPPORT
 	if (mmc_regulator_init(1, "s3", 1800000))
 		goto out1;
-	msm7x30_sdc1_data.swfi_latency = msm7x30_power_collapse_latency(
-		MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT);
+	
 
 	if (machine_is_msm7x30_fluid()) {
 		msm7x30_sdc1_data.ocr_mask =  MMC_VDD_27_28 | MMC_VDD_28_29;
@@ -6349,8 +6331,6 @@ out1:
 #ifdef CONFIG_MMC_MSM_SDC2_SUPPORT
 	if (mmc_regulator_init(2, "s3", 1800000))
 		goto out2;
-	msm7x30_sdc2_data.swfi_latency = msm7x30_power_collapse_latency(
-		MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT);
 
 	if (machine_is_msm8x55_svlte_surf())
 		msm7x30_sdc2_data.msmsdcc_fmax =  24576000;
@@ -6366,8 +6346,6 @@ out2:
 #ifdef CONFIG_MMC_MSM_SDC3_SUPPORT
 	if (mmc_regulator_init(3, "s3", 1800000))
 		goto out3;
-	msm7x30_sdc3_data.swfi_latency = msm7x30_power_collapse_latency(
-		MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT);
 
 	msm_sdcc_setup_gpio(3, 1);
 	msm_add_sdcc(3, &msm7x30_sdc3_data);
@@ -6376,8 +6354,6 @@ out3:
 #ifdef CONFIG_MMC_MSM_SDC4_SUPPORT
 	if (mmc_regulator_init(4, "gp10", 2850000))
 		return;
-	msm7x30_sdc4_data.swfi_latency = msm7x30_power_collapse_latency(
-		MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT);
 
 	msm_add_sdcc(4, &msm7x30_sdc4_data);
 #endif
@@ -6470,7 +6446,7 @@ static void __init pmic8058_leds_init(void)
 }
 
 static struct msm_spm_platform_data msm_spm_data __initdata = {
-	.reg_base_addr = MSM_SAW_BASE,
+	.reg_base_addr = MSM_SAW0_BASE,
 
 	.reg_init_values[MSM_SPM_REG_SAW_CFG] = 0x05,
 	.reg_init_values[MSM_SPM_REG_SAW_SPM_CTL] = 0x18,
@@ -6908,7 +6884,7 @@ static void __init msm7x30_init(void)
 		msm7x30_init_uart3(); // 2011-01-20 hyeokseon.yu
 	}
 	msm_spm_init(&msm_spm_data, 1);
-	acpuclk_init(&acpuclk_7x30_soc_data);
+	platform_device_register(&msm7x30_device_acpuclk);
 
 #ifdef CONFIG_SMSC911X
 	if (machine_is_msm7x30_surf() || machine_is_msm7x30_fluid())
@@ -6970,6 +6946,7 @@ static void __init msm7x30_init(void)
 	msm_fb_add_devices();
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	BUG_ON(msm_pm_boot_init(&msm_pm_boot_pdata));
+	msm_pm_register_irqs();
 	msm_device_i2c_init();
 	msm_device_i2c_2_init();
 #if defined(CONFIG_USE_QUP_I2C)
@@ -7314,8 +7291,8 @@ static void __init msm7x30_init_early(void)
 	msm7x30_allocate_memory_regions();
 }
 
-static void __init msm7x30_fixup(struct machine_desc *desc, struct tag *tags,
-				 char **cmdline, struct meminfo *mi)
+static void __init msm7x30_fixup(struct tag *tags, char **cmdline,
+	struct meminfo *mi)
 {
 	for (; tags->hdr.size; tags = tag_next(tags)) {
 		if (tags->hdr.tag == ATAG_MEM && tags->u.mem.start ==
@@ -7338,3 +7315,5 @@ MACHINE_START(ARIESVE, "GT-I9001 Board")
 	.handle_irq = vic_handle_irq,
 	.fixup = msm7x30_fixup,
 MACHINE_END
+
+//NEED TO IMPORT NEW WIRELESS DRIVER !!!
