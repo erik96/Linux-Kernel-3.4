@@ -226,26 +226,27 @@ struct clk_ops clk_ops_pcom_ext_config = {
 #ifdef CONFIG_MACH_ARIESVE
 static int pc_clk_set_rate2(struct clk *clk, unsigned long rate)
 {
-	   int res = _pc_clk_set_min_rate(clk, rate / 2);
-	   return res;
+	int res = _pc_clk_set_min_rate(clk, rate / 2);
+	return res;
 }
 
 static unsigned long pc_clk_get_rate2(struct clk *clk)
 {
-       return pc_clk_get_rate(clk) * 2;
+	return pc_clk_get_rate(clk) * 2;
 }
 
 struct clk_ops clk_ops_pcom_div2 = {
-       .enable = pc_clk_enable,
-       .disable = pc_clk_disable,
-       .auto_off = pc_clk_disable,
-       .reset = pc_reset,
-       .set_rate = pc_clk_set_rate2,
-       .set_flags = pc_clk_set_flags,
-       .get_rate = pc_clk_get_rate2,
-       .is_enabled = pc_clk_is_enabled,
-       .round_rate = pc_clk_round_rate,
-       .is_local = pc_clk_is_local,
+	.enable = pc_clk_enable,
+	.disable = pc_clk_disable,
+	.reset = pc_reset,
+	.set_rate = pc_clk_set_rate2,
+	.set_max_rate = pc_clk_set_max_rate,
+	.set_flags = pc_clk_set_flags,
+	.get_rate = pc_clk_get_rate2,
+	.is_enabled = pc_clk_is_enabled,
+	.round_rate = pc_clk_round_rate,
+	.is_local = pc_clk_is_local,
+	.handoff = pc_clk_handoff,
 };
 #endif
 
