@@ -2762,12 +2762,11 @@ static void __init msm7x30_init_marimba(void)
 	vreg_marimba_2 = regs[1].consumer;
 	vreg_bahama    = regs[2].consumer;
 }
+#ifdef CONFIG_TIMPANI_CODEC
 
 static struct marimba_codec_platform_data timpani_codec_pdata = {
 	.marimba_codec_power =  msm_marimba_codec_power,
-#ifdef CONFIG_TIMPANI_CODEC
 	.snddev_profile_init = msm_snddev_init_timpani,
-#endif
 };
 
 static struct marimba_platform_data timpani_pdata = {
@@ -2788,6 +2787,7 @@ static struct i2c_board_info msm_i2c_gsbi7_timpani_info[] = {
 		.platform_data = &timpani_pdata,
 	},
 };
+#endif
 
 #ifdef CONFIG_MSM7KV2_AUDIO
 static struct resource msm_aictl_resources[] = {
@@ -5393,7 +5393,6 @@ static struct platform_device *devices[] __initdata = {
 	&msm_adc_device,
 	&msm_ebi0_thermal,
 	&msm_ebi1_thermal,
-	&msm_adsp_device,
 #ifdef CONFIG_SAMSUNG_JACK
 	&sec_device_jack,
 #endif
