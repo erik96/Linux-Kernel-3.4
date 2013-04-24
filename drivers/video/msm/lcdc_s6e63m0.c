@@ -57,7 +57,7 @@
 
 #include <linux/delay.h>
 #include <linux/mfd/pmic8058.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include "msm_fb.h"
 #include <linux/fb.h>
 #include <linux/backlight.h>
