@@ -2974,7 +2974,11 @@ static struct net_device_ops dhd_ops_pri = {
 	.ndo_do_ioctl = dhd_ioctl_entry,
 	.ndo_start_xmit = dhd_start_xmit,
 	.ndo_set_mac_address = dhd_set_mac_address,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
+	.ndo_set_rx_mode = dhd_set_multicast_list,
+#else
 	.ndo_set_multicast_list = dhd_set_multicast_list,
+#endif
 };
 
 static struct net_device_ops dhd_ops_virt = {
@@ -2982,7 +2986,11 @@ static struct net_device_ops dhd_ops_virt = {
 	.ndo_do_ioctl = dhd_ioctl_entry,
 	.ndo_start_xmit = dhd_start_xmit,
 	.ndo_set_mac_address = dhd_set_mac_address,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
+	.ndo_set_rx_mode = dhd_set_multicast_list,
+#else
 	.ndo_set_multicast_list = dhd_set_multicast_list,
+#endif
 };
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)) */
 
