@@ -30,6 +30,7 @@
 //#include <plat/gpio-cfg.h>
 #include <linux/delay.h>
 #include <linux/gpio.h>
+#include <linux/io.h> 
 //#include <mach/gpio-aries.h>
 #include "tspdrv.h"
 #include <linux/clk.h>
