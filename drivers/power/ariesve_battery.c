@@ -1135,7 +1135,7 @@ static int msm_batt_average_temperature(int temp_adc)
 		return 0;
 
 	if (count == 0 && temp_adc == 150)
-		return 0;	// hanapark: ë¶€íŒ… ì´ˆê¸° vbatt task ì´ˆê¸°í™” ì´ì „ ê°’ì€ ë¬´ì‹œí•˜ë„ë¡ ë°©ì–´ ì½”ë“œ ì¶”ê°€ 
+		return 0;	// hanapark: ºÎÆÃ ÃÊ±â vbatt task ÃÊ±âÈ­ ÀÌÀü °ªÀº ¹«½ÃÇÏµµ·Ï ¹æ¾î ÄÚµå Ãß°¡ 
 
 #ifdef __BATT_TEST_DEVICE__
 		if (temp_test_adc)
@@ -2729,3 +2729,4 @@ MODULE_AUTHOR("Kiran Kandi, Qualcomm Innovation Center, Inc.");
 MODULE_DESCRIPTION("Battery driver for Qualcomm MSM chipsets.");
 MODULE_VERSION("1.0");
 MODULE_ALIAS("platform:ariesve_battery");
+

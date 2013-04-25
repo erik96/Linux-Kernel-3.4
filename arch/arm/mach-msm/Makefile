@@ -264,9 +264,12 @@ obj-$(CONFIG_MACH_MSM8625_FFA) += board-msm7x27a.o board-7627a-all.o
 obj-$(CONFIG_MACH_MSM8625_EVT) += board-msm7x27a.o board-7627a-all.o
 ifdef CONFIG_MACH_ANCORA
 obj-$(CONFIG_ARCH_MSM7X30) += board-ancora.o devices-msm7x30.o memory_topology.o #samsung_vibrator.o
-endif
+else
 ifdef CONFIG_MACH_ARIESVE
 obj-$(CONFIG_ARCH_MSM7X30) += board-ariesve.o devices-msm7x30.o memory_topology.o
+else
+obj-$(CONFIG_ARCH_MSM7X30) += board-msm7x30.o devices-msm7x30.o memory_topology.o
+endif
 endif
 obj-$(CONFIG_ARCH_MSM7X30) += clock-local.o clock-7x30.o acpuclock-7x30.o clock-pll.o
 obj-$(CONFIG_ARCH_MSM7X30) += broadcom_wlan.o
@@ -379,9 +382,12 @@ obj-$(CONFIG_MACH_MSM7X27_SURF) += board-msm7627-regulator.o
 obj-$(CONFIG_MACH_MSM7X27_FFA) += board-msm7627-regulator.o
 ifdef CONFIG_MACH_ANCORA
 obj-$(CONFIG_ARCH_MSM7X30) += board-ancora-regulator.o
-endif
+else
 ifdef CONFIG_MACH_ARIESVE
-obj-$(CONFIG_ARCH_MSM7X30) += board-ariesve-regulator.o
+obj-$(CONFIG_ARCH_MSM7X30) += board-ariesve-regulator.o 
+else
+obj-$(CONFIG_ARCH_MSM7X30) += board-msm7x30-regulator.o
+endif
 endif
 obj-$(CONFIG_ARCH_MSM7X27A) += board-msm7x27a-regulator.o
 endif

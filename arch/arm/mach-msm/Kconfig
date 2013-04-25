@@ -610,7 +610,6 @@ config MACH_ARIESVE
 	help
 	  Support for the Samsung Aries VE board.
 
-
 config MACH_ANCORA
 	depends on ARCH_MSM7X30
 	depends on !MSM_STACKED_MEMORY

@@ -138,6 +138,7 @@
 
 #define WLAN_RESET		127 //Reset
 
+
 struct class *sec_class;
 EXPORT_SYMBOL(sec_class);
 struct device *switch_dev;
@@ -163,13 +164,6 @@ EXPORT_SYMBOL(switch_dev);
 #define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000
 #define PMEM_KERNEL_EBI0_SIZE		0x600000
 #define MSM_PMEM_AUDIO_SIZE		0x200000
-
-#ifdef CONFIG_ION_MSM
-static struct platform_device ion_dev;
-#define MSM_ION_AUDIO_SIZE	(MSM_PMEM_AUDIO_SIZE + PMEM_KERNEL_EBI0_SIZE)
-#define MSM_ION_SF_SIZE		MSM_PMEM_SF_SIZE
-#define MSM_ION_HEAP_NUM	4
-#endif
 
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
@@ -213,6 +207,7 @@ static struct platform_device ion_dev;
 #define OPTNAV_I2C_SLAVE_ADDR	(0xB0 >> 1)
 #define OPTNAV_IRQ		20
 #define OPTNAV_CHIP_SELECT	19
+
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
 #define PM8058_GPIO_SYS_TO_PM(sys_gpio)    (sys_gpio - NR_GPIO_IRQS)
@@ -424,7 +419,6 @@ static int pm8058_gpios_init(void)
 		},
 	};
 
-
 	struct pm8xxx_gpio_init_info sdcc_det = {
 		PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SD_DET - 1),
 		{
@@ -444,7 +438,6 @@ static int pm8058_gpios_init(void)
 		pr_err("%s PMIC_GPIO_SD_DET config failed\n", __func__);
 		return rc;
 	}
-
 
 	if (machine_is_msm7x30_fluid()) {
 		/* Haptics gpio */
@@ -1090,19 +1083,6 @@ static struct i2c_board_info si4709_info[] __initdata = {
 };
 #endif
 
-static void config_gpio_table(uint32_t *table, int len)
-{
-	int n, rc;
-	for (n = 0; n < len; n++) {
-		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
-		if (rc) {
-			pr_err("%s: gpio_tlmm_config(%#x)=%d\n",
-				 __func__, table[n], rc);
-			 break;
-		}
-	}
-}
-
 #ifdef CONFIG_MSM_CAMERA
 
 #ifdef NOT_SET
@@ -1213,7 +1193,18 @@ static uint32_t camera_on_gpio_table[] = {
 #endif
 };
 
-
+static void config_gpio_table(uint32_t *table, int len)
+{
+	int n, rc;
+	for (n = 0; n < len; n++) {
+		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
+		if (rc) {
+			pr_err("%s: gpio_tlmm_config(%#x)=%d\n",
+				__func__, table[n], rc);
+			break;
+		}
+	}
+}
 static int config_camera_on_gpios(void)
 {
 	config_gpio_table(camera_on_gpio_table,
@@ -1593,7 +1584,6 @@ static struct platform_device msm_camera_sensor_s5ka3dfx = {
 };
 #endif
 
-
 #ifdef CONFIG_MSM_VPE
 static struct resource msm_vpe_resources[] = {
 	{
@@ -1620,25 +1610,24 @@ static struct platform_device msm_vpe_device = {
 
 #ifdef CONFIG_MSM_GEMINI
 static struct resource msm_gemini_resources[] = {
-  {
-	.start  = 0xA3A00000,
-	.end    = 0xA3A00000 + 0x0150 - 1,
-	.flags  = IORESOURCE_MEM,
-  },
-  {
-	.start  = INT_JPEG,
-	.end    = INT_JPEG,
-	.flags  = IORESOURCE_IRQ,
-  },
+	{
+		.start  = 0xA3A00000,
+		.end    = 0xA3A00000 + 0x0150 - 1,
+		.flags  = IORESOURCE_MEM,
+	},
+	{
+		.start  = INT_JPEG,
+		.end    = INT_JPEG,
+		.flags  = IORESOURCE_IRQ,
+	},
 };
 
 static struct platform_device msm_gemini_device = {
-  .name           = "msm_gemini",
-  .resource       = msm_gemini_resources,
-  .num_resources  = ARRAY_SIZE(msm_gemini_resources),
+	.name           = "msm_gemini",
+	.resource       = msm_gemini_resources,
+	.num_resources  = ARRAY_SIZE(msm_gemini_resources),
 };
 #endif
-
 
 static struct platform_device msm_vibrator_device = {
 	.name 		    = "msm_vibrator",
@@ -1675,24 +1664,24 @@ static struct platform_device amp_i2c_gpio_device = {
 #ifdef CONFIG_SENSORS_YDA165
 static struct snd_set_ampgain init_ampgain[] = {
 	[0] = {
-		.in1_gain = 5,
-		.in2_gain = 5,
+		.in1_gain = 2,
+		.in2_gain = 2,
 		.hp_att = 31,
 		.hp_gainup = 0,
 		.sp_att = 31,
 		.sp_gainup = 0,
 	},
 	[1] = { /* [HSS] headset_call, speaker_call */
-		.in1_gain = 4,
-		.in2_gain = 2,
-		.hp_att = 20,
+		.in1_gain = 2,
+		.in2_gain = 0,
+		.hp_att = 14,
 		.hp_gainup = 0,
 		.sp_att = 31,
 		.sp_gainup = 0,
 	},
 	[2] = { /* [HSS] headset_speaker */
-		.in1_gain = 6,
-		.in2_gain = 1,
+		.in1_gain = 5,
+		.in2_gain = 0,
 		.hp_att = 5,
 		.hp_gainup = 0,
 		.sp_att = 31,
@@ -2131,7 +2120,6 @@ static int config_timpani_reset(void)
 	return rc;
 }
 
-
 static unsigned int msm_timpani_setup_power(void)
 {
 	int rc;
@@ -2521,7 +2509,6 @@ static struct regulator_bulk_data regs_tsadc_timpani[] = {
 static struct regulator_bulk_data *regs_tsadc;
 static int regs_tsadc_count;
 
-
 static int marimba_tsadc_power(int vreg_on)
 {
 	int rc = 0;
@@ -2647,7 +2634,6 @@ static struct msm_ts_platform_data msm_ts_data = {
 	.inv_y          = 4096,
 	.can_wakeup	= false,
 };
-
 
 static struct marimba_tsadc_platform_data marimba_tsadc_pdata = {
 	.marimba_tsadc_power =  marimba_tsadc_power,
@@ -3797,8 +3783,6 @@ static struct msm_pm_platform_data msm_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 	},
 };
 
-
-
 static struct msm_pm_boot_platform_data msm_pm_boot_pdata __initdata = {
         .mode = MSM_PM_BOOT_CONFIG_RESET_VECTOR_VIRT,
         .v_addr = (uint32_t *)PAGE_OFFSET,
@@ -4021,7 +4005,6 @@ static struct msm_gpio lcdc_gpio_config_data[] = {
 	{ GPIO_CFG(129, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), "lcd_reset" },
 };
 
-
 /* GPIO TLMM: Status */
 #define GPIO_ENABLE     0
 #define GPIO_DISABLE    1
@@ -4039,7 +4022,6 @@ static void config_lcdc_gpio_table(uint32_t *table, int len, unsigned enable)
 			break;
 		}
 	}
-
 }
 
 static void lcdc_s6d04m0_config_gpios(int enable)
@@ -4304,18 +4286,17 @@ static int display_common_power(int on)
 		display_regs_initialized = true;
 	}
 
-
 	if (on) {
 		rc = regulator_enable(mddi_ldo17);
 		if (rc) {
-			pr_err("%s: LDO20 regulator enable failed (%d)\n",
+			pr_err("%s: LDO17 regulator enable failed (%d)\n",
 			       __func__, rc);
 			return rc;
 		}
 
 		rc = regulator_enable(mddi_ldo15);
 		if (rc) {
-			pr_err("%s: LCD regulator enable failed (%d)\n",
+			pr_err("%s: LCD LDO15 regulator enable failed (%d)\n",
 				__func__, rc);
 			return rc;
 		}
@@ -4325,14 +4306,14 @@ static int display_common_power(int on)
 	} else {
 		rc = regulator_disable(mddi_ldo17);
 		if (rc) {
-			pr_err("%s: LDO20 regulator disable failed (%d)\n",
+			pr_err("%s: LDO17 regulator disable failed (%d)\n",
 			       __func__, rc);
 			return rc;
 		}
 
 		rc = regulator_disable(mddi_ldo15);
 		if (rc) {
-			pr_err("%s: LCD regulator disable failed (%d)\n",
+			pr_err("%s: LCD LDO15 regulator disable failed (%d)\n",
 				__func__, rc);
 			return rc;
 		}
@@ -4476,54 +4457,71 @@ static struct lcdc_platform_data lcdc_pdata = {
 	.lcdc_power_save   = lcdc_panel_power,
 };
 
+static struct regulator *atv_s4, *atv_ldo9;
+
+static int __init atv_dac_power_init(void)
+{
+	int rc;
+	struct regulator_bulk_data regs[] = {
+		{ .supply = "smps4", .min_uV = 2200000, .max_uV = 2200000 },
+		{ .supply = "ldo9",  .min_uV = 2050000, .max_uV = 2050000 },
+	};
+
+	rc = regulator_bulk_get(NULL, ARRAY_SIZE(regs), regs);
+
+	if (rc) {
+		pr_err("%s: could not get regulators: %d\n", __func__, rc);
+		goto bail;
+	}
+
+	rc = regulator_bulk_set_voltage(ARRAY_SIZE(regs), regs);
+
+	if (rc) {
+		pr_err("%s: could not set voltages: %d\n", __func__, rc);
+		goto reg_free;
+	}
+
+	atv_s4   = regs[0].consumer;
+	atv_ldo9 = regs[1].consumer;
+
+reg_free:
+	regulator_bulk_free(ARRAY_SIZE(regs), regs);
+bail:
+	return rc;
+}
+
 static int atv_dac_power(int on)
 {
 	int rc = 0;
-	struct vreg *vreg_s4, *vreg_ldo9;
-
-	vreg_s4 = vreg_get(NULL, "s4");
-	if (IS_ERR(vreg_s4)) {
-		rc = PTR_ERR(vreg_s4);
-		pr_err("%s: s4 vreg get failed (%d)\n",
-			__func__, rc);
-		return -1;
-	}
-	vreg_ldo9 = vreg_get(NULL, "gp1");
-	if (IS_ERR(vreg_ldo9)) {
-		rc = PTR_ERR(vreg_ldo9);
-		pr_err("%s: ldo9 vreg get failed (%d)\n",
-			__func__, rc);
-		return rc;
-	}
 
 	if (on) {
-		rc = vreg_enable(vreg_s4);
+		rc = regulator_enable(atv_s4);
 		if (rc) {
 			pr_err("%s: s4 vreg enable failed (%d)\n",
 				__func__, rc);
 			return rc;
 		}
-		rc = vreg_enable(vreg_ldo9);
+		rc = regulator_enable(atv_ldo9);
 		if (rc) {
 			pr_err("%s: ldo9 vreg enable failed (%d)\n",
 				__func__, rc);
 			return rc;
 		}
 	} else {
-		rc = vreg_disable(vreg_ldo9);
+		rc = regulator_disable(atv_ldo9);
 		if (rc) {
 			pr_err("%s: ldo9 vreg disable failed (%d)\n",
 				   __func__, rc);
 			return rc;
 		}
-		rc = vreg_disable(vreg_s4);
+		rc = regulator_disable(atv_s4);
 		if (rc) {
 			pr_err("%s: s4 vreg disable failed (%d)\n",
 				   __func__, rc);
 			return rc;
 		}
 	}
-	return 0;
+	return rc;
 }
 
 static struct tvenc_platform_data atv_pdata = {
@@ -5395,10 +5393,6 @@ static struct platform_device *devices[] __initdata = {
 	&msm_adc_device,
 	&msm_ebi0_thermal,
 	&msm_ebi1_thermal,
-#ifdef CONFIG_ION_MSM
-	&ion_dev,
-#endif
-	&msm_adsp_device,
 #ifdef CONFIG_SAMSUNG_JACK
 	&sec_device_jack,
 #endif
@@ -6214,11 +6208,9 @@ static struct mmc_platform_data msm7x30_sdc4_data = {
 	.ocr_mask	= MMC_VDD_27_28 | MMC_VDD_28_29,
 	.translate_vdd	= msm_sdcc_setup_power,
 	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
-
 	.status      = msm7x30_sdcc_slot_status,
 	.status_irq  = MSM_GPIO_TO_INT(116),
 	.irq_flags   = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
-
 	.wpswitch    = msm_sdcc_get_wpswitch,
 	.msmsdcc_fmin	= 144000,
 	.msmsdcc_fmid	= 24576000,
@@ -6315,12 +6307,11 @@ static void __init msm7x30_init_mmc(void)
 #ifdef CONFIG_MMC_MSM_SDC1_SUPPORT
 	if (mmc_regulator_init(1, "s3", 1800000))
 		goto out1;
-	
 
 	if (machine_is_msm7x30_fluid()) {
 		msm7x30_sdc1_data.ocr_mask =  MMC_VDD_27_28 | MMC_VDD_28_29;
 		if (msm_sdc1_lvlshft_enable()) {
-			pr_err("%s: could not enable level shift\n", __func__);
+			pr_err("%s: could not enable level shift\n");
 			goto out1;
 		}
 	}
@@ -7170,8 +7161,6 @@ static int __init pmem_kernel_ebi0_size_setup(char *p)
 }
 early_param("pmem_kernel_ebi0_size", pmem_kernel_ebi0_size_setup);
 
-
-
 static struct memtype_reserve msm7x30_reserve_table[] __initdata = {
 	[MEMTYPE_SMI] = {
 	},
@@ -7260,7 +7249,6 @@ static void __init msm7x30_allocate_memory_regions(void)
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
 		size, addr, __pa(addr));
 
-#ifdef CONFIG_ANDROID_RAM_CONSOLE
 	/* RAM Console can't use alloc_bootmem(), since that zeroes the
 	 * region */
 	size = MSM_RAM_CONSOLE_SIZE;
@@ -7270,7 +7258,6 @@ static void __init msm7x30_allocate_memory_regions(void)
 		size, (unsigned long)ram_console_resources[0].start);
 	/* We still have to reserve it, though */
 	reserve_bootmem(ram_console_resources[0].start,size,0);
-#endif
 }
 
 static void __init msm7x30_map_io(void)
@@ -7292,7 +7279,7 @@ static void __init msm7x30_init_early(void)
 }
 
 static void __init msm7x30_fixup(struct tag *tags, char **cmdline,
-	struct meminfo *mi)
+				 struct meminfo *mi)
 {
 	for (; tags->hdr.size; tags = tag_next(tags)) {
 		if (tags->hdr.tag == ATAG_MEM && tags->u.mem.start ==
@@ -7305,7 +7292,7 @@ static void __init msm7x30_fixup(struct tag *tags, char **cmdline,
 }
 
 MACHINE_START(ARIESVE, "GT-I9001 Board")
-	.atag_offset = PLAT_PHYS_OFFSET + 0x100,
+	.atag_offset = 0x100,
 	.map_io = msm7x30_map_io,
 	.reserve = msm7x30_reserve,
 	.init_irq = msm7x30_init_irq,
@@ -7315,5 +7302,3 @@ MACHINE_START(ARIESVE, "GT-I9001 Board")
 	.handle_irq = vic_handle_irq,
 	.fixup = msm7x30_fixup,
 MACHINE_END
-
-//NEED TO IMPORT NEW WIRELESS DRIVER !!!

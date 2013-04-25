@@ -144,5 +144,5 @@ obj-$(CONFIG_MOBICORE_SUPPORT)  += gud/
 obj-$(CONFIG_MSM_QDSS)		+= coresight/
 
 obj-y				+= dpram/
-obj-$(CONFIG_MACH_ANCORA)       += sensors_ancora/
-obj-$(CONFIG_MACH_ARIESVE)  	+= sensors_ariesve/
+obj-$(CONFIG_MACH_ANCORA)  += sensors_ancora/
+obj-$(CONFIG_MACH_ARIESVE)  += sensors_ariesve/

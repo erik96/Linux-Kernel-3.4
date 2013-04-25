@@ -29,7 +29,7 @@
 
 //////////////////////////////
 
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <linux/jiffies.h>
 #include "linux/i2c/qt602240_ts.h"
 
@@ -2713,7 +2713,7 @@ void TSP_forced_release(void)
 
         input_report_abs(qt602240->input_dev, ABS_MT_POSITION_X, fingerInfo[i].x);
         input_report_abs(qt602240->input_dev, ABS_MT_POSITION_Y, fingerInfo[i].y);
-        input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ì´ë©´ Release, ì•„ë‹ˆë©´ Press ìƒíƒœ(Down or Move)
+        input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ÀÌ¸é Release, ¾Æ´Ï¸é Press »óÅÂ(Down or Move)
         input_report_abs(qt602240->input_dev, ABS_MT_WIDTH_MAJOR, fingerInfo[i].size);   
 		input_report_abs(qt602240->input_dev, ABS_MT_TRACKING_ID, i); // i = Finger ID 
         input_mt_sync(qt602240->input_dev);
@@ -2751,7 +2751,7 @@ void TSP_forced_release_forOKkey(void)
 
         input_report_abs(qt602240->input_dev, ABS_MT_POSITION_X, fingerInfo[i].x);
         input_report_abs(qt602240->input_dev, ABS_MT_POSITION_Y, fingerInfo[i].y);
-        input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ì´ë©´ Release, ì•„ë‹ˆë©´ Press ìƒíƒœ(Down or Move)
+        input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ÀÌ¸é Release, ¾Æ´Ï¸é Press »óÅÂ(Down or Move)
         input_report_abs(qt602240->input_dev, ABS_MT_WIDTH_MAJOR, fingerInfo[i].size); 
 		input_report_abs(qt602240->input_dev, ABS_MT_TRACKING_ID, i); // i = Finger ID 
         input_mt_sync(qt602240->input_dev);
@@ -2826,7 +2826,7 @@ void  get_message(void* data)
                         fingerInfo[i].pressure= 0;
                         input_report_abs(qt602240->input_dev, ABS_MT_POSITION_X, fingerInfo[i].x);
                         input_report_abs(qt602240->input_dev, ABS_MT_POSITION_Y, fingerInfo[i].y);
-                        input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ì´ë©´ Release, ì•„ë‹ˆë©´ Press ìƒíƒœ(Down or Move)
+                        input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ÀÌ¸é Release, ¾Æ´Ï¸é Press »óÅÂ(Down or Move)
                         input_report_abs(qt602240->input_dev, ABS_MT_WIDTH_MAJOR, fingerInfo[i].size);
 						input_report_abs(qt602240->input_dev, ABS_MT_TRACKING_ID, i); // i = Finger ID 
                         input_mt_sync(qt602240->input_dev);
@@ -2993,7 +2993,7 @@ void  get_message(void* data)
 
             input_report_abs(qt602240->input_dev, ABS_MT_POSITION_X, fingerInfo[i].x);
             input_report_abs(qt602240->input_dev, ABS_MT_POSITION_Y, fingerInfo[i].y);
-            input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ì´ë©´ Release, ì•„ë‹ˆë©´ Press ìƒíƒœ(Down or Move)
+            input_report_abs(qt602240->input_dev, ABS_MT_TOUCH_MAJOR, fingerInfo[i].pressure);    // 0ÀÌ¸é Release, ¾Æ´Ï¸é Press »óÅÂ(Down or Move)
             input_report_abs(qt602240->input_dev, ABS_MT_WIDTH_MAJOR, fingerInfo[i].size);
 			input_report_abs(qt602240->input_dev, ABS_MT_TRACKING_ID, i); // i = Finger ID 
             input_mt_sync(qt602240->input_dev);

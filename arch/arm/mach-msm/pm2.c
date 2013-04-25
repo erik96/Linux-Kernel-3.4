@@ -24,10 +24,13 @@
 #include <linux/pm_qos.h>
 #include <linux/suspend.h>
 #include <linux/io.h>
+#include <linux/gpio.h>
+#include <linux/suspend.h>
+#include <linux/reboot.h>
 #include <linux/tick.h>
 #include <linux/memory.h>
 #include <mach/msm_iomap.h>
-#include <mach/system.h>
+#include <asm/system.h>
 #ifdef CONFIG_CPU_V7
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
@@ -1572,6 +1575,8 @@ static struct platform_suspend_ops msm_pm_ops = {
 	.valid = suspend_valid_only_mem,
 };
 
+
+
 /* Hotplug the "non boot" CPU's and put
  * the cores into low power mode
  */
@@ -1599,6 +1604,151 @@ void msm_pm_cpu_enter_lowpower(unsigned int cpu)
 			"CPU%u: %s: shutting down failed!!!\n", cpu, __func__);
 	}
 }
+
+/******************************************************************************
+ * Restart Definitions
+ *****************************************************************************/
+
+static uint32_t restart_reason = 0x776655AA;
+
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA) || defined(CONFIG_MACH_ANCORA_TMO) || defined(CONFIG_MACH_APACHE)
+struct smem_info {
+	unsigned int info;
+};
+
+static DEFINE_SPINLOCK(msm_reboot_lock);
+extern struct smem_info *smem_flag;
+extern void request_phone_power_off_reset(int flag);
+static void __iomem *reset_base;
+static void __iomem *msm_m_gpio2_owner_base;
+int power_off_done;
+#define RESET_ALL		0xab800200
+#define MSM_M_GPIO2_OWNER	0xabd00504
+#define RESET_ALL_VAL		0x1
+int (*set_recovery_mode)(void);
+EXPORT_SYMBOL(set_recovery_mode);
+int (*set_recovery_mode_done)(void);
+EXPORT_SYMBOL(set_recovery_mode_done);
+extern int curr_usb_status;
+extern int curr_ta_status;
+typedef struct
+{
+	unsigned int command;
+	unsigned int status;
+	unsigned int data1;
+	unsigned int data2;
+} smem_proc_comm_data_type;
+volatile smem_proc_comm_data_type *proc_comm;
+#endif
+
+static void msm_pm_power_off(void)
+{
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA) || defined(CONFIG_MACH_ANCORA_TMO) || defined(CONFIG_MACH_APACHE)
+
+	msm_rpcrouter_close();
+	proc_comm = (volatile smem_proc_comm_data_type *)MSM_SHARED_RAM_BASE;
+	proc_comm[4].command = curr_usb_status || curr_ta_status;
+	/* debug level value set to 0 to avoid entering silent reset mode when restarting */
+	smem_flag->info = 0x0;
+
+	printk("%s: send PCOM_POWER_DOWN\n",__func__);
+	msm_proc_comm(PCOM_POWER_DOWN, 0, 0);
+	power_off_done = 1;
+
+	printk("%s: call request_phone_power_off\n",__func__);
+	request_phone_power_off_reset(1);
+
+	printk("%s: do nothing!!\n",__func__);
+
+	/* block irq after machine off 2011-05-17 hc.hyun */
+	spin_lock_irq(&msm_reboot_lock);
+
+	/* if machine does not off after 30sec from PCOM_POWER_DOWN, RESET register set to 0x1 2011-05-17 hc.hyun */
+	mdelay(30000);
+	printk("%s: retry with setting PS_HOLD to low.\n",__func__);
+	writel((readl(msm_m_gpio2_owner_base) | (1<<13)), msm_m_gpio2_owner_base);
+	writel((readl(msm_m_gpio2_owner_base + 0x30) | (1<<13)), msm_m_gpio2_owner_base + 0x30);
+	gpio_set_value(29, 0);
+
+	for (;;)
+		;
+#else
+	msm_rpcrouter_close();
+	msm_proc_comm(PCOM_POWER_DOWN, 0, 0);
+	for (;;)
+		;
+#endif
+}
+
+static void msm_pm_restart(char str, const char *cmd)
+{
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA) || defined(CONFIG_MACH_ANCORA_TMO) || defined(CONFIG_MACH_APACHE)
+
+	msm_rpcrouter_close();
+
+	/* debug level value set to 0 to avoid entering silent reset mode when restarting */
+	smem_flag->info = 0x0;
+
+	printk("%s: send PCOM_RESET_CHIP\n",__func__);
+
+	msm_proc_comm(PCOM_RESET_CHIP, &restart_reason, 0);
+	//msm_proc_comm(PCOM_RESET_CHIP_IMM, &restart_reason, 0);
+	power_off_done = 1;
+
+	printk("%s: do nothing!!\n",__func__);
+
+	/* block irq after machine off 2011-05-17 hc.hyun */
+	spin_lock_irq(&msm_reboot_lock);
+
+	/* if machine does not off after 30sec from PCOM_RESET_CHIP, RESET register set to 0x1 2011-05-17 hc.hyun */
+	mdelay(30000);
+	printk("%s: retry with  setting PS_HOLD to low.\n",__func__);
+	writel((readl(msm_m_gpio2_owner_base) | (1<<13)), msm_m_gpio2_owner_base);
+	writel((readl(msm_m_gpio2_owner_base + 0x30) | (1<<13)), msm_m_gpio2_owner_base + 0x30);
+	gpio_set_value(29, 0);
+
+	for (;;)
+	;
+#else
+	msm_rpcrouter_close();
+	msm_proc_comm(PCOM_RESET_CHIP, &restart_reason, 0);
+
+	for (;;)
+		;
+#endif
+}
+
+static int msm_reboot_call
+	(struct notifier_block *this, unsigned long code, void *_cmd)
+{
+	if ((code == SYS_RESTART) && _cmd) {
+		char *cmd = _cmd;
+		if (!strcmp(cmd, "bootloader")) {
+			restart_reason = 0x77665500;
+		} else if (!strcmp(cmd, "recovery")) {
+			restart_reason = 0x77665502;
+		} else if (!strcmp(cmd, "recovery_done")) {
+			restart_reason = 0x77665503;
+		} else if (!strcmp(cmd, "download")) {
+			mdelay(1500);
+			restart_reason = 0x776655FF;
+		} else if (!strcmp(cmd, "eraseflash")) {
+			restart_reason = 0x776655EF;
+		} else if (!strncmp(cmd, "oem-", 4)) {
+			unsigned code = simple_strtoul(cmd + 4, 0, 16) & 0xff;
+			restart_reason = 0x6f656d00 | code;
+		} else if (!strncmp(cmd, "arm11_fota", 10)) {
+			restart_reason = 0x77665504;
+		} else {
+			restart_reason = 0x77665501;
+		}
+	}
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block msm_reboot_notifier = {
+	.notifier_call = msm_reboot_call,
+};
 
 /*
  * Initialize the power management subsystem.
@@ -1667,6 +1817,10 @@ static int __init msm_pm_init(void)
 		     virt_to_phys(&msm_pm_pc_pgd));
 #endif
 
+	pm_power_off = msm_pm_power_off;
+	arm_pm_restart = msm_pm_restart;
+	register_reboot_notifier(&msm_reboot_notifier);
+
 	msm_pm_smem_data = smem_alloc(SMEM_APPS_DEM_SLAVE_DATA,
 		sizeof(*msm_pm_smem_data));
 	if (msm_pm_smem_data == NULL) {
@@ -1718,6 +1872,11 @@ static int __init msm_pm_init(void)
 
 	msm_pm_mode_sysfs_add();
 	msm_pm_add_stats(enable_stats, ARRAY_SIZE(enable_stats));
+	
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA) || defined(CONFIG_MACH_ANCORA_TMO) || defined(CONFIG_MACH_APACHE)
+	reset_base = ioremap(RESET_ALL, PAGE_SIZE);
+	msm_m_gpio2_owner_base = ioremap(MSM_M_GPIO2_OWNER, PAGE_SIZE);
+#endif
 }
 
 late_initcall_sync(msm_pm_init);

@@ -985,3 +985,4 @@ module_exit(touchkey_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("@@@");
 MODULE_DESCRIPTION("cypress touch keypad");
+
