@@ -28,7 +28,7 @@
 
 static uint32_t restart_reason = 0x776655AA;
 
-#ifdef CONFIG_MACH_ANCORA
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA)
 struct smem_info {
 	unsigned int info;
 };
@@ -60,7 +60,7 @@ volatile smem_proc_comm_data_type *proc_comm;
 
 static void msm_pm_power_off(void)
 {
-#ifdef CONFIG_MACH_ANCORA
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA)
 
 	msm_rpcrouter_close();
 	proc_comm = (volatile smem_proc_comm_data_type *)MSM_SHARED_RAM_BASE;
@@ -99,7 +99,7 @@ static void msm_pm_power_off(void)
 
 static void msm_pm_restart(char str, const char *cmd)
 {
-#ifdef CONFIG_MACH_ANCORA
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA)
 
 	msm_rpcrouter_close();
 
@@ -198,7 +198,7 @@ static int __init msm_pm_restart_init(void)
 
 	return ret;
 
-#ifdef CONFIG_MACH_ANCORA
+#if defined(CONFIG_MACH_ARIESVE) || defined(CONFIG_MACH_ANCORA)
         reset_base = ioremap(RESET_ALL, PAGE_SIZE);
         msm_m_gpio2_owner_base = ioremap(MSM_M_GPIO2_OWNER, PAGE_SIZE);
 #endif
