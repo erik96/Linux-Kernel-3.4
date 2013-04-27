@@ -282,7 +282,7 @@ static const struct iwl_base_params iwl6000_base_params = {
 	.chain_noise_scale = 1000,
 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
 	.max_event_log_size = 512,
-	.shadow_reg_enable = true,
+	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
 };
 
 static const struct iwl_base_params iwl6050_base_params = {
@@ -299,7 +299,7 @@ static const struct iwl_base_params iwl6050_base_params = {
 	.chain_noise_scale = 1500,
 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
 	.max_event_log_size = 1024,
-	.shadow_reg_enable = true,
+	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
 };
 
 static const struct iwl_base_params iwl6000_g2_base_params = {
@@ -316,7 +316,7 @@ static const struct iwl_base_params iwl6000_g2_base_params = {
 	.chain_noise_scale = 1000,
 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
 	.max_event_log_size = 512,
-	.shadow_reg_enable = true,
+	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
 };
 
 static const struct iwl_ht_params iwl6000_ht_params = {
@@ -336,7 +336,7 @@ static const struct iwl_bt_params iwl6000_bt_params = {
 #define IWL_DEVICE_6005						\
 	.fw_name_pre = IWL6005_FW_PRE,				\
 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
-	.ucode_api_ok = IWL6000G2_UCODE_API_OK,			\
+	.ucode_api_ok = IWL6000G2B_UCODE_API_OK,		\
 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,		\
 	.max_inst_size = IWL60_RTC_INST_SIZE,			\
 	.max_data_size = IWL60_RTC_DATA_SIZE,			\
@@ -390,7 +390,7 @@ const struct iwl_cfg iwl6005_2agn_mow2_cfg = {
 #define IWL_DEVICE_6030						\
 	.fw_name_pre = IWL6030_FW_PRE,				\
 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
-	.ucode_api_ok = IWL6000G2B_UCODE_API_OK,		\
+	.ucode_api_ok = IWL6000G2_UCODE_API_OK,			\
 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,		\
 	.max_inst_size = IWL60_RTC_INST_SIZE,			\
 	.max_data_size = IWL60_RTC_DATA_SIZE,			\
